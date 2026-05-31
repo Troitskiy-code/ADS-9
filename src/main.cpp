@@ -6,11 +6,9 @@
 #include <random>
 #include "tree.h"
 
-using namespace std::chrono;
-
 int main() {
     std::vector<char> symbols = { '1', '2', '3' };
-    Tree tree(symbols);
+    PMTree tree(symbols);
 
     std::cout << "All permutations:\n";
     auto all = getAllPerms(tree);
@@ -40,35 +38,36 @@ int main() {
         std::vector<char> abc;
         for (int i = 0; i < n; ++i) abc.push_back('A' + i);
 
-        Tree t(abc);
+        PMTree t(abc);
         int total = t.getTotalPerms();
 
-        auto start = high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
         volatile auto allPerms = getAllPerms(t);
-        auto end = high_resolution_clock::now();
-        double timeAll = duration<double>(end - start).count();
+        auto end = std::chrono::high_resolution_clock::now();
+        double timeAll = std::chrono::duration<double>(end - start).count();
 
         std::uniform_int_distribution<int> dist(1, total);
         double time1 = 0.0, time2 = 0.0;
         for (int i = 0; i < trials; ++i) {
             int num = dist(rng);
 
-            start = high_resolution_clock::now();
+            start = std::chrono::high_resolution_clock::now();
             volatile auto res1 = getPerm1(t, num);
-            end = high_resolution_clock::now();
-            time1 += duration<double>(end - start).count();
+            end = std::chrono::high_resolution_clock::now();
+            time1 += std::chrono::duration<double>(end - start).count();
 
-            start = high_resolution_clock::now();
+            start = std::chrono::high_resolution_clock::now();
             volatile auto res2 = getPerm2(t, num);
-            end = high_resolution_clock::now();
-            time2 += duration<double>(end - start).count();
+            end = std::chrono::high_resolution_clock::now();
+            time2 += std::chrono::duration<double>(end - start).count();
         }
         time1 /= trials;
         time2 /= trials;
 
         data << n << "," << timeAll << "," << time1 << "," << time2 << "\n";
-        std::cout << "n=" << n << " total=" << total << " all=" << timeAll
-            << "s perm1=" << time1 << "s perm2=" << time2 << "s\n";
+        std::cout << "n=" << n << " total=" << total
+            << " all=" << timeAll << "s perm1=" << time1
+            << "s perm2=" << time2 << "s\n";
     }
     data.close();
     std::cout << "Experiment data saved to result/data.csv\n";
