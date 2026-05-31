@@ -3,11 +3,12 @@
 #include <fstream>
 #include <locale>
 #include <cstdlib>
+#include <algorithm>
+#include <vector>
 #include "tree.h"
 
-// Вспомогательная: построение дерева для заданного набора доступных символов
-Tree::Node* Tree::build(const std::vector<char>& available) {
-    Node* node = new Node('\0'); // фиктивный корень поддерева
+PMTree::Node* PMTree::build(const std::vector<char>& available) {
+    Node* node = new Node('\0');
     if (available.empty()) {
         node->leaves = 1;
         return node;
@@ -19,10 +20,9 @@ Tree::Node* Tree::build(const std::vector<char>& available) {
             if (x != c) next.push_back(x);
         }
         Node* sub = build(next);
-        // переносим детей sub в child
         child->children = sub->children;
         child->leaves = sub->leaves;
-        delete sub; // sub больше не нужен
+        delete sub;
         node->children.push_back(child);
     }
     node->leaves = 0;
@@ -32,7 +32,7 @@ Tree::Node* Tree::build(const std::vector<char>& available) {
     return node;
 }
 
-void Tree::clear(Node* node) {
+void PMTree::clear(Node* node) {
     if (!node) return;
     for (Node* child : node->children) {
         clear(child);
@@ -40,7 +40,7 @@ void Tree::clear(Node* node) {
     delete node;
 }
 
-void Tree::collectPerms(Node* node, std::vector<char>& current,
+void PMTree::collectPerms(Node* node, std::vector<char>& current,
     std::vector<std::vector<char>>& out) const {
     if (node->children.empty()) {
         out.push_back(current);
@@ -53,10 +53,8 @@ void Tree::collectPerms(Node* node, std::vector<char>& current,
     }
 }
 
-std::vector<char> Tree::getPermFast(Node* node, int num) const {
-    if (num < 1 || num > node->leaves) {
-        return {};
-    }
+std::vector<char> PMTree::getPermFast(Node* node, int num) const {
+    if (num < 1 || num > node->leaves) return {};
     std::vector<char> result;
     Node* cur = node;
     int k = num;
@@ -76,7 +74,7 @@ std::vector<char> Tree::getPermFast(Node* node, int num) const {
     return result;
 }
 
-Tree::Tree(const std::vector<char>& alphabet) {
+PMTree::PMTree(const std::vector<char>& alphabet) {
     std::vector<char> sorted = alphabet;
     std::sort(sorted.begin(), sorted.end());
     root = new Node('\0');
@@ -99,22 +97,22 @@ Tree::Tree(const std::vector<char>& alphabet) {
     root->leaves = totalPerms;
 }
 
-Tree::~Tree() {
+PMTree::~PMTree() {
     clear(root);
 }
 
-std::vector<std::vector<char>> Tree::getAllPerms() const {
+std::vector<std::vector<char>> PMTree::getAllPerms() const {
     std::vector<std::vector<char>> result;
     std::vector<char> current;
     collectPerms(root, current, result);
     return result;
 }
 
-std::vector<std::vector<char>> getAllPerms(const Tree& tree) {
+std::vector<std::vector<char>> getAllPerms(const PMTree& tree) {
     return tree.getAllPerms();
 }
 
-std::vector<char> getPerm1(const Tree& tree, int num) {
+std::vector<char> getPerm1(const PMTree& tree, int num) {
     auto all = tree.getAllPerms();
     if (num < 1 || num > static_cast<int>(all.size())) {
         return {};
@@ -122,7 +120,7 @@ std::vector<char> getPerm1(const Tree& tree, int num) {
     return all[num - 1];
 }
 
-std::vector<char> getPerm2(const Tree& tree, int num) {
+std::vector<char> getPerm2(const PMTree& tree, int num) {
     if (num < 1 || num > tree.getTotalPerms()) {
         return {};
     }
